@@ -1,0 +1,354 @@
+Sub Main()
+    cn.Open "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + App.Path + "\userdb.mdb;Persist Security Info=False"
+    firstlogin = True
+   ' key = "AIM"
+    j = 1
+    
+    For i = 69 To 69 + 21
+        arrTab(j) = Chr(i)
+    
+        j = j + 1
+    
+    Next
+    For i = 0 To 9
+        arrTab(j) = CStr(i)
+    
+        j = j + 1
+    
+    Next
+    arrTab(j) = "_"
+    j = j + 1
+    
+    arrTab(j) = "?"
+    j = j + 1
+    
+    arrTab(j) = "@"
+    j = j + 1
+    
+    arrTab(j) = ","
+    j = j + 1
+    
+    arrTab(j) = "."
+    j = j + 1
+    
+    arrTab(j) = "&"
+    j = j + 1
+    
+    For i = 65 To 65 + 3
+        arrTab(j) = Chr(i)
+        j = j + 1
+    
+    Next
+  '  frmmenu.Show
+  '  frmuser.Show
+    'frmcustomer.Show
+    Form1.Show
+End Sub
+
+Public Function encryptdata(plaintext As String, key As String) As String
+
+Dim lenkey, lenplain
+Dim cipher As String, newkey As String
+lenkey = Len(key)
+'lenplain = Len(plaintext)
+k = 1
+newkey = key
+For i = Len(key) + 1 To Len(plaintext)
+    newkey = newkey & arrTab(k)
+    k = k + 1
+Next
+
+lenplain = Len(plaintext)
+For i = 1 To Len(plaintext)
+    For j = 1 To 42
+        plainchar = Mid(plaintext, i, 1)
+        If plainchar = arrTab(j) Then
+            foundchar = True
+            plainno = j
+            Exit For
+        End If
+    Next
+    If foundchar Then
+        foundchar = False
+        For j = 1 To 42
+            plainchar = Mid(newkey, i, 1)
+            If plainchar = arrTab(j) Then
+                keyno = j
+                foundchar = True
+                Exit For
+            End If
+        Next
+    End If
+    If foundchar Then
+        NO = (plainno + keyno) Mod 43
+        cipher = cipher & arrTab(NO)
+    Else
+        cipher = ""
+        Exit For
+    End If
+Next
+encryptdata = cipher
+
+End Function
+
+
+Public Function decryptdata(ciphertext As String, key As String) As String
+Dim lenkey, lenplain
+Dim cipher As String, newkey As String
+lenkey = Len(key)
+k = 1
+newkey = key
+For i = Len(key) + 1 To Len(ciphertext)
+    newkey = newkey & arrTab(k)
+    k = k + 1
+Next
+
+lenplain = Len(ciphertext)
+For i = 1 To Len(ciphertext)
+    For j = 1 To 42
+        plainchar = Mid(ciphertext, i, 1)
+        If plainchar = arrTab(j) Then
+            foundchar = True
+            plainno = j
+            Exit For
+        End If
+    Next
+    If foundchar Then
+        foundchar = False
+        For j = 1 To 42
+            plainchar = Mid(newkey, i, 1)
+            If plainchar = arrTab(j) Then
+                keyno = j
+                foundchar = True
+                Exit For
+            End If
+        Next
+    End If
+    If foundchar Then
+        NO = plainno - keyno
+       
+        If NO < 0 Then
+            NO = NO + 43
+        ElseIf NO = 0 Then
+            NO = NO + 42
+        End If
+       
+        plaintext = plaintext & arrTab(NO)
+    Else
+        plaintext = ""
+        Exit For
+    End If
+Next
+
+decryptdata = plaintext
+End Function
+
+Public Function getpositioninmatrix(char1 As String, pos() As Integer)
+   found = False
+    For i = 1 To 6
+        For j = 1 To 7
+            If char1 = playmat(i, j) Then
+                pos(1) = i
+                pos(2) = j
+                found = True
+                Exit For
+            End If
+        Next
+        If found Then
+            Exit For
+        End If
+    Next
+End Function
+
+Public Function getcharfor(ro As Integer, col As Integer, ro1 As Integer, col1 As Integer, cipherchar() As String)
+    If ro <> ro1 And col <> col1 Then
+        cipherchar(1) = playmat(ro, col1)
+        cipherchar(2) = playmat(ro1, col)
+    ElseIf ro = ro1 Then
+        colpos = (col + keylength) Mod 7
+        If colpos = 0 Then
+            colpos = 1
+        End If
+        cipherchar(1) = playmat(ro, colpos)
+        colpos = (col1 + keylength) Mod 7
+        If colpos = 0 Then
+            colpos = 1
+        End If
+        cipherchar(2) = playmat(ro1, colpos)
+        
+    ElseIf col = col1 Then
+        ropos = (ro + keylength) Mod 6
+        If ropos = 0 Then
+            ropos = 1
+        End If
+        cipherchar(1) = playmat(ropos, col)
+        ropos = (ro1 + keylength) Mod 6
+         If ropos = 0 Then
+            ropos = 1
+        End If
+        cipherchar(2) = playmat(ropos, col1)
+    End If
+    getcharfor = cipherchar
+End Function
+
+Public Function getdecharfor(ro As Integer, col As Integer, ro1 As Integer, col1 As Integer, decipherchar() As String)
+    If ro <> ro1 And col <> col1 Then
+        decipherchar(1) = playmat(ro, col1)
+        decipherchar(2) = playmat(ro1, col)
+    ElseIf ro = ro1 Then
+        colpos = col - keylength
+        If colpos <= 0 Then
+            colpos = colpos + 7
+        End If
+        'colpos = col - (keylength Mod 7)
+        decipherchar(1) = playmat(ro, colpos)
+        'colpos = col1 - (keylength Mod 7)
+        colpos = col1 - keylength
+        If colpos <= 0 Then
+            colpos = colpos + 7
+        End If
+        decipherchar(2) = playmat(ro1, colpos)
+    ElseIf col = col1 Then
+        'ropos = (ro - keylength Mod 6)
+        ropos = ro - keylength
+        If ropos <= 0 Then
+            ropos = ropos + 6
+        End If
+        decipherchar(1) = playmat(ropos, col)
+       ' ropos = (ro1 - keylength Mod 6)
+        ropos = ro1 - keylength
+        If ropos <= 0 Then
+            ropos = ropos + 6
+        End If
+        decipherchar(2) = playmat(ropos, col1)
+    End If
+    getdecharfor = cipherchar
+End Function
+
+Public Function decryptPlay(ciphertext As String) As String
+    Dim char1 As String, char2 As String
+    Dim pos1(2) As Integer
+    Dim pos2(2) As Integer
+    Dim cipherplay(2) As String
+    prevchar = ""
+    strtext = ""
+    For i = 1 To Len(ciphertext) Step 2
+        char1 = Mid(ciphertext, i, 1)
+        char2 = Mid(ciphertext, i + 1, 1)
+        getpositioninmatrix char1, pos1
+        getpositioninmatrix char2, pos2
+       
+        getdecharfor pos1(1), pos1(2), pos2(1), pos2(2), cipherplay
+        playcipher = playcipher & cipherplay(1) & cipherplay(2)
+    Next
+'    Form1.Text6.text = playcipher
+    For i = 1 To Len(playcipher)
+        char1 = Mid(playcipher, i, 1)
+        If char1 <> "_" Then
+            playdecipher = playdecipher & char1
+        End If
+    Next
+    'If Len(playtext) Mod 2 <> 0 Then
+    '    playtext = playtext & "X"
+    'End If
+    decryptPlay = playdecipher
+End Function
+
+Public Function encryptPlay(plaintext As String) As String
+    Dim char1 As String, char2 As String
+    Dim pos1(2) As Integer
+    Dim pos2(2) As Integer
+    Dim cipherplay(2) As String
+    prevchar = ""
+    strtext = ""
+    Dim playcipher As String, playtext As String
+    For i = 1 To Len(plaintext)
+        char1 = Mid(plaintext, i, 1)
+        char2 = Mid(plaintext, i + 1, 1)
+        If char1 = char2 Then
+            playtext = playtext & char1
+            playtext = playtext & "_"
+        Else
+            playtext = playtext & char1
+            playtext = playtext & char2
+            i = i + 1
+        End If
+    Next
+    If Len(playtext) Mod 2 <> 0 Then
+        playtext = playtext & "X"
+    End If
+'    Form1.Text5.Text = playtext
+    For i = 1 To Len(playtext) Step 2
+        char1 = Mid(playtext, i, 1)
+        char2 = Mid(playtext, i + 1, 1)
+        getpositioninmatrix char1, pos1
+        getpositioninmatrix char2, pos2
+       
+        getcharfor pos1(1), pos1(2), pos2(1), pos2(2), cipherplay
+        playcipher = playcipher + cipherplay(1) + cipherplay(2)
+    Next
+    encryptPlay = playcipher
+End Function
+
+Function createPlayTable(strkey As String)
+    Dim playchar As String
+    lenkey = Len(strkey)
+    Dim playtabchar As String
+    k = 1
+     For i = 1 To 6
+        For j = 1 To 7
+            playmat(i, j) = ""
+            playarr(k) = ""
+            k = k + 1
+        Next
+    Next
+    k = 1
+    For i = 1 To 6
+        For j = 1 To 7
+            If (k <= lenkey) Then
+                playchar = Mid(strkey, k, 1)
+            Else
+                For m = 1 To 42
+                    bfound = False
+                    For l = 1 To k
+                        If arrTab(m) = playarr(l) Then
+                            bfound = True
+                            Exit For
+                        End If
+                    Next
+                    If Not bfound Then
+                        playchar = arrTab(m)
+                        Exit For
+                    End If
+                Next
+                
+            End If
+            playtabchar = playtabchar & playchar
+            playmat(i, j) = playchar
+            playarr(k) = playchar
+            k = k + 1
+        Next
+    Next
+   ' MsgBox playtabchar
+End Function
+
+Function encrypt(txt As String, mykey As String)
+    Dim txt1 As String, txt2 As String
+    txt1 = encryptdata(txt, mykey)
+    createPlayTable (mykey)
+    keylength = Len(mykey)
+    txt2 = encryptPlay(txt1)
+    'txt2 = txt1
+    encrypt = txt2
+End Function
+
+Function decrypt(txt As String, mykey As String)
+    Dim txt1 As String, txt2 As String
+    createPlayTable (mykey)
+    keylength = Len(mykey)
+    txt2 = decryptPlay(txt)
+   ' txt2 = txt
+    txt1 = decryptdata(txt2, mykey)
+    
+    decrypt = txt1
+End Function
